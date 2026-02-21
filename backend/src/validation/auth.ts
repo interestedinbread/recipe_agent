@@ -19,3 +19,8 @@ export const signInResponseSchema = z.object({
     token: z.string()
 })
 
+export type signUpBody = z.infer<typeof signUpBodySchema>
+export type signInBody = z.infer<typeof signInBodySchema>
+export type singInResponse = z.infer<typeof signInResponseSchema>
+
+
