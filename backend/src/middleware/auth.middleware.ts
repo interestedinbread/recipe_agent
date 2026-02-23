@@ -1,4 +1,4 @@
-/// <reference path="./types/express.d.ts" />
+/// <reference path="../types/express.d.ts" />
 
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
@@ -14,9 +14,9 @@ const jwtSecret = (() => {
         return null
     }
     return secret
-})
+})()
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
     // extract token from request header
     const header = req.headers.authorization
     const token = header?.startsWith('Bearer ') ? header.split(' ')[1] : null
@@ -26,21 +26,24 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
         return res.status(401).json({ message: "JWT token required"})
     }
 
+    if(!jwtSecret){
+        return res.status(500).json({ message: "Server misconfiguration: JWT secret not set" })
+    }
+
     try{
     // decode the jwt
-    const decoded = jwt.verify(
+    const decoded = await jwt.verify(
         token,
         jwtSecret
     )
 
-    // if it's not a string, return a message
-    if(typeof decoded !== 'string'){
-        return res.status(400).json({ message: 'String expected'})
+    // jwt.verify returns an object for object payloads; reject if it's a string
+    if (typeof decoded === 'string') {
+        return res.status(400).json({ message: 'Invalid token payload' })
     }
 
     // store token and type it using the type we defined above
-
-    const payload = decoded as AuthTokenPayload
+    const payload = decoded as unknown as AuthTokenPayload
 
     req.user = {
         id: payload.id,
@@ -50,6 +53,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     next()
 
     } catch (err) {
+        console.error('Auth middleware error:', err)
         res.status(401).json({ message: "Invalid token" })
     }
 }
