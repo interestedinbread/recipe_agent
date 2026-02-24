@@ -38,6 +38,26 @@ export const createPantryItemController = async (req: Request, res: Response) =>
     }
 }
 
-export const deletePantryItemController = async () => {
+export const deletePantryItemController = async (req: Request, res: Response) => {
+    try{
+        const rawId = req.params.id
+        const itemId = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : undefined
 
+        if(!itemId){
+            throw new Error('Item id required')
+        }
+
+        const userId = req.user?.id
+        if(!userId){
+            throw new Error('User Id required')
+        }
+
+        const result = await deletePantryItem(itemId, userId)
+
+        return res.status(200).json(result) 
+
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Internal server error"
+        return res.status(400).json({ error: message})
+    }
 }

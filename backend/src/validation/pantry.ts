@@ -12,3 +12,6 @@ export const createPantryItemSchema = z.object({
 export const deletePantryItemSchema = z.object({
     id: z.string()
 })
+
+export type createPantryItemInput = z.infer<typeof createPantryItemSchema>
+export type deletePantryItemInput = z.infer<typeof deletePantryItemSchema>
